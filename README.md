@@ -4,30 +4,14 @@ A community-driven Q&A platform for developers to ask questions, share knowledge
 
 ## Features
 
-### Public Dashboard
-- **No login required** to browse questions and answers
-- Search functionality to find questions by title, content, or tags
-- View question details, votes, answers, and author information
-- Responsive design with modern UI
-
-### User Authentication
-- User registration and login
-- JWT-based authentication
-- Password reset functionality
-- User profiles with reputation system
-
-### Question Management
-- **Authenticated users only** can post questions
-- Rich text editor for question content
-- Tag system for better categorization
-- Vote system (upvote/downvote)
-- Question status tracking (open, closed, etc.)
-
-### Answer System
-- **Authenticated users only** can post answers
-- Vote system for answers
-- Accept best answer functionality
-- Answer editing and moderation
+- **User Authentication**: Secure registration and login system
+- **Question Management**: Ask, edit, and manage questions
+- **Answer System**: Provide answers to questions
+- **Voting System**: Upvote and downvote questions and answers
+- **Search & Filter**: Find questions by title, content, or tags
+- **User Profiles**: Personalize your profile with bio and avatar
+- **Real-time Notifications**: Get notified of new answers and interactions
+- **Responsive Design**: Works seamlessly on desktop and mobile devices
 
 ## Getting Started
 
@@ -84,21 +68,21 @@ A community-driven Q&A platform for developers to ask questions, share knowledge
    cd client && npm start
    ```
 
-## Usage
+## User Guide
 
-### For Visitors (No Account Required)
-1. Visit `http://localhost:3000`
-2. Browse questions on the public dashboard
-3. Search for specific topics using the search bar
-4. View question details and answers
-5. Click "Sign Up" or "Login" to participate
+### For New Users
+1. **Register**: Create an account with your email and username
+2. **Explore**: Browse questions and answers on the public dashboard
+3. **Ask**: Post your first question about programming or technology
+4. **Answer**: Help others by providing helpful answers
+5. **Vote**: Upvote good questions/answers, downvote poor ones
+6. **Engage**: Comment on answers and interact with the community
 
-### For Registered Users
-1. **Sign up** for a new account or **login** with existing credentials
-2. **Ask Questions**: Click "Ask Question" button (requires authentication)
-3. **Answer Questions**: Provide helpful answers to other users' questions
-4. **Vote**: Upvote good questions/answers, downvote poor ones (requires reputation)
-5. **Build Reputation**: Earn points for helpful contributions
+### For Developers
+- **Guest Access**: Anyone can browse and search content without registration
+- **Full Access**: Registered users can ask questions, answer, vote, and comment
+- **No Reputation Barriers**: All authenticated users can participate fully
+- **Community Driven**: Quality content rises through voting
 
 ### Navigation
 - **Home** (`/`): Public dashboard with all questions

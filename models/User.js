@@ -58,10 +58,6 @@ const userSchema = new mongoose.Schema({
       match: [/^https?:\/\/.+/, 'Please enter a valid URL']
     }
   },
-  reputation: {
-    type: Number,
-    default: 0
-  },
   badges: [{
     name: String,
     description: String,
@@ -104,7 +100,6 @@ const userSchema = new mongoose.Schema({
 // Index for better query performance
 userSchema.index({ username: 1 });
 userSchema.index({ email: 1 });
-userSchema.index({ reputation: -1 });
 
 // Hash password before saving
 userSchema.pre('save', async function(next) {
@@ -150,7 +145,6 @@ userSchema.methods.getPublicProfile = function() {
     id: this._id,
     username: this.username,
     profile: this.profile,
-    reputation: this.reputation,
     badges: this.badges,
     isVerified: this.isVerified,
     lastSeen: this.lastSeen,

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
-import { Eye, EyeOff, Mail, Lock, ArrowRight } from 'lucide-react';
+import { Eye, EyeOff, Mail, Lock, ArrowRight, Eye as EyeIcon } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import LoadingSpinner from '../components/LoadingSpinner';
 
@@ -145,6 +145,19 @@ const Login: React.FC = () => {
                 </div>
               )}
             </button>
+          </div>
+
+          {/* Guest Access Button */}
+          <div>
+            <Link
+              to="/"
+              className="group relative w-full flex justify-center py-3 px-4 border border-gray-300 text-sm font-medium rounded-lg text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all duration-200"
+            >
+              <div className="flex items-center">
+                <EyeIcon className="mr-2 h-4 w-4" />
+                Browse as Guest
+              </div>
+            </Link>
           </div>
 
           {/* Links */}

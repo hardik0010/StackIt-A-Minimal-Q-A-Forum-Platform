@@ -2,7 +2,7 @@ const express = require('express');
 const { body, validationResult } = require('express-validator');
 const Question = require('../models/Question');
 const Answer = require('../models/Answer');
-const { protect, optionalAuth, checkReputation } = require('../middleware/auth');
+const { protect, optionalAuth } = require('../middleware/auth');
 
 const router = express.Router();
 
@@ -41,7 +41,7 @@ router.get('/', optionalAuth, async (req, res) => {
     sortQuery[sortBy] = sortOrder;
 
     const questions = await Question.find(query)
-      .populate('author', 'username profile.firstName profile.lastName reputation')
+      .populate('author', 'username profile.firstName profile.lastName')
       .populate('acceptedAnswer', 'content author')
       .sort(sortQuery)
       .skip(skip)
@@ -86,7 +86,7 @@ router.get('/', optionalAuth, async (req, res) => {
 router.get('/:id', optionalAuth, async (req, res) => {
   try {
     const question = await Question.findById(req.params.id)
-      .populate('author', 'username profile.firstName profile.lastName reputation')
+      .populate('author', 'username profile.firstName profile.lastName')
       .populate('acceptedAnswer', 'content author')
       .populate('votes.upvotes.user', 'username')
       .populate('votes.downvotes.user', 'username');
@@ -125,7 +125,7 @@ router.get('/:id', optionalAuth, async (req, res) => {
 // @route   POST /api/questions
 // @desc    Create a new question
 // @access  Private
-router.post('/', protect, checkReputation(1), [
+router.post('/', protect, [
   body('title')
     .isLength({ min: 10, max: 200 })
     .withMessage('Title must be between 10 and 200 characters'),
@@ -164,7 +164,7 @@ router.post('/', protect, checkReputation(1), [
     await question.save();
 
     // Populate author info
-    await question.populate('author', 'username profile.firstName profile.lastName reputation');
+    await question.populate('author', 'username profile.firstName profile.lastName');
 
     res.status(201).json({
       success: true,
@@ -249,7 +249,7 @@ router.put('/:id', protect, [
     await question.save();
 
     // Populate author info
-    await question.populate('author', 'username profile.firstName profile.lastName reputation');
+    await question.populate('author', 'username profile.firstName profile.lastName');
 
     res.json({
       success: true,
@@ -310,7 +310,7 @@ router.delete('/:id', protect, async (req, res) => {
 // @route   POST /api/questions/:id/vote
 // @desc    Vote on a question
 // @access  Private
-router.post('/:id/vote', protect, checkReputation(15), [
+router.post('/:id/vote', protect, [
   body('voteType')
     .isIn(['upvote', 'downvote'])
     .withMessage('Vote type must be upvote or downvote')
@@ -339,7 +339,7 @@ router.post('/:id/vote', protect, checkReputation(15), [
     if (!question.canUserVote(req.user)) {
       return res.status(403).json({
         success: false,
-        message: 'Minimum reputation of 15 required to vote'
+        message: 'You are not authorized to vote'
       });
     }
 
@@ -347,7 +347,7 @@ router.post('/:id/vote', protect, checkReputation(15), [
     if (voteType === 'downvote' && !question.canUserDownvote(req.user)) {
       return res.status(403).json({
         success: false,
-        message: 'Minimum reputation of 125 required to downvote'
+        message: 'You are not authorized to downvote'
       });
     }
 
@@ -362,7 +362,7 @@ router.post('/:id/vote', protect, checkReputation(15), [
     await question.addVote(req.user._id, voteType);
 
     // Populate author info
-    await question.populate('author', 'username profile.firstName profile.lastName reputation');
+    await question.populate('author', 'username profile.firstName profile.lastName');
 
     res.json({
       success: true,

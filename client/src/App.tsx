@@ -5,8 +5,10 @@ import Login from './pages/Login';
 import Signup from './pages/Signup';
 import Dashboard from './pages/Dashboard';
 import PublicDashboard from './pages/PublicDashboard';
+import QuestionDetail from './pages/QuestionDetail';
 import AskQuestion from './pages/AskQuestion';
 import ForgotPassword from './pages/ForgotPassword';
+import Profile from './pages/Profile';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import LoadingSpinner from './components/LoadingSpinner';
 import './App.css';
@@ -77,11 +79,17 @@ function App() {
                 <Dashboard />
               </ProtectedRoute>
             } />
+            <Route path="/profile" element={
+              <ProtectedRoute>
+                <Profile />
+              </ProtectedRoute>
+            } />
             <Route path="/ask" element={
               <ProtectedRoute>
                 <AskQuestion />
               </ProtectedRoute>
             } />
+            <Route path="/question/:id" element={<QuestionDetail />} />
             <Route path="/" element={<PublicDashboard />} />
           </Routes>
         </div>

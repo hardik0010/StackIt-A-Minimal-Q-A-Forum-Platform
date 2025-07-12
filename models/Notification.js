@@ -20,8 +20,7 @@ const notificationSchema = new mongoose.Schema({
       'question_upvoted',
       'answer_upvoted',
       'mention',
-      'admin_message',
-      'reputation_change'
+      'admin_message'
     ],
     required: true
   },
@@ -45,7 +44,6 @@ const notificationSchema = new mongoose.Schema({
       ref: 'Answer'
     },
     commentId: String,
-    reputationChange: Number,
     adminMessage: String
   },
   isRead: {

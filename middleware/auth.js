@@ -88,31 +88,6 @@ const authorize = (...roles) => {
   };
 };
 
-// Check if user can perform action (reputation check)
-const checkReputation = (minReputation) => {
-  return (req, res, next) => {
-    if (!req.user) {
-      return res.status(401).json({
-        success: false,
-        message: 'Authentication required'
-      });
-    }
-
-    if (req.user.role === 'admin') {
-      return next();
-    }
-
-    if (req.user.reputation < minReputation) {
-      return res.status(403).json({
-        success: false,
-        message: `Minimum reputation of ${minReputation} required for this action`
-      });
-    }
-
-    next();
-  };
-};
-
 // Rate limiting for specific actions
 const rateLimit = (maxAttempts, windowMs) => {
   const attempts = new Map();
@@ -147,6 +122,5 @@ module.exports = {
   protect,
   optionalAuth,
   authorize,
-  checkReputation,
   rateLimit
 }; 

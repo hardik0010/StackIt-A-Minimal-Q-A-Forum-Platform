@@ -1,49 +1,58 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { LogOut, User, Mail, Calendar, Home, Plus, MessageSquare } from 'lucide-react';
+import { User as UserIcon, Mail, Calendar, MessageSquare, Award, TrendingUp } from 'lucide-react';
+import Navbar from '../components/Navbar';
+import axios from 'axios';
+import LoadingSpinner from '../components/LoadingSpinner';
+
+interface UserStats {
+  questionsAsked: number;
+  answersGiven: number;
+  totalReputation: number;
+  acceptedAnswers: number;
+  questionUpvotes: number;
+  questionDownvotes: number;
+  answerUpvotes: number;
+  answerDownvotes: number;
+}
 
 const Dashboard: React.FC = () => {
-  const { user, logout } = useAuth();
+  const { user } = useAuth();
+  const [stats, setStats] = useState<UserStats | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchUserStats();
+  }, []);
+
+  const fetchUserStats = async () => {
+    try {
+      const response = await axios.get('/api/users/stats');
+      if (response.data.success) {
+        setStats(response.data.data);
+      }
+    } catch (error) {
+      console.error('Error fetching user stats:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <Navbar />
+        <div className="flex items-center justify-center min-h-screen">
+          <LoadingSpinner size="lg" text="Loading dashboard..." />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="bg-white shadow-sm border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-4">
-            <div className="flex items-center">
-              <div className="h-8 w-8 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-lg flex items-center justify-center">
-                <span className="text-white font-bold text-sm">S</span>
-              </div>
-              <h1 className="ml-3 text-xl font-semibold text-gray-900">StackIt Dashboard</h1>
-            </div>
-            <div className="flex items-center space-x-4">
-              <Link
-                to="/"
-                className="flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors"
-              >
-                <Home className="h-4 w-4 mr-2" />
-                Home
-              </Link>
-              <Link
-                to="/ask"
-                className="flex items-center px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors"
-              >
-                <Plus className="h-4 w-4 mr-2" />
-                Ask Question
-              </Link>
-              <button
-                onClick={logout}
-                className="flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors"
-              >
-                <LogOut className="h-4 w-4 mr-2" />
-                Logout
-              </button>
-            </div>
-          </div>
-        </div>
-      </header>
+      <Navbar />
 
       {/* Main Content */}
       <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
@@ -54,7 +63,7 @@ const Dashboard: React.FC = () => {
               <div className="flex items-center">
                 <div className="flex-shrink-0">
                   <div className="h-12 w-12 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-full flex items-center justify-center">
-                    <User className="h-6 w-6 text-white" />
+                    <UserIcon className="h-6 w-6 text-white" />
                   </div>
                 </div>
                 <div className="ml-4">
@@ -76,7 +85,7 @@ const Dashboard: React.FC = () => {
               <div className="p-5">
                 <div className="flex items-center">
                   <div className="flex-shrink-0">
-                    <User className="h-6 w-6 text-gray-400" />
+                    <UserIcon className="h-6 w-6 text-gray-400" />
                   </div>
                   <div className="ml-5 w-0 flex-1">
                     <dl>
@@ -137,12 +146,13 @@ const Dashboard: React.FC = () => {
 
           {/* Stats */}
           <div className="mt-6 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
+            {/* Questions Asked */}
             <div className="bg-white overflow-hidden shadow rounded-lg">
               <div className="p-5">
                 <div className="flex items-center">
                   <div className="flex-shrink-0">
                     <div className="h-8 w-8 bg-blue-500 rounded-md flex items-center justify-center">
-                      <span className="text-white font-bold text-sm">0</span>
+                      <span className="text-white font-bold text-sm">{stats?.questionsAsked || 0}</span>
                     </div>
                   </div>
                   <div className="ml-5 w-0 flex-1">
@@ -150,19 +160,20 @@ const Dashboard: React.FC = () => {
                       <dt className="text-sm font-medium text-gray-500 truncate">
                         Questions Asked
                       </dt>
-                      <dd className="text-lg font-medium text-gray-900">0</dd>
+                      <dd className="text-lg font-medium text-gray-900">{stats?.questionsAsked || 0}</dd>
                     </dl>
                   </div>
                 </div>
               </div>
             </div>
 
+            {/* Answers Given */}
             <div className="bg-white overflow-hidden shadow rounded-lg">
               <div className="p-5">
                 <div className="flex items-center">
                   <div className="flex-shrink-0">
                     <div className="h-8 w-8 bg-green-500 rounded-md flex items-center justify-center">
-                      <span className="text-white font-bold text-sm">0</span>
+                      <span className="text-white font-bold text-sm">{stats?.answersGiven || 0}</span>
                     </div>
                   </div>
                   <div className="ml-5 w-0 flex-1">
@@ -170,19 +181,20 @@ const Dashboard: React.FC = () => {
                       <dt className="text-sm font-medium text-gray-500 truncate">
                         Answers Given
                       </dt>
-                      <dd className="text-lg font-medium text-gray-900">0</dd>
+                      <dd className="text-lg font-medium text-gray-900">{stats?.answersGiven || 0}</dd>
                     </dl>
                   </div>
                 </div>
               </div>
             </div>
 
+            {/* Reputation */}
             <div className="bg-white overflow-hidden shadow rounded-lg">
               <div className="p-5">
                 <div className="flex items-center">
                   <div className="flex-shrink-0">
-                    <div className="h-8 w-8 bg-yellow-500 rounded-md flex items-center justify-center">
-                      <span className="text-white font-bold text-sm">{user?.reputation || 0}</span>
+                    <div className="h-8 w-8 bg-purple-500 rounded-md flex items-center justify-center">
+                      <TrendingUp className="h-4 w-4 text-white" />
                     </div>
                   </div>
                   <div className="ml-5 w-0 flex-1">
@@ -190,27 +202,28 @@ const Dashboard: React.FC = () => {
                       <dt className="text-sm font-medium text-gray-500 truncate">
                         Reputation
                       </dt>
-                      <dd className="text-lg font-medium text-gray-900">{user?.reputation || 0}</dd>
+                      <dd className="text-lg font-medium text-gray-900">{stats?.totalReputation || 0}</dd>
                     </dl>
                   </div>
                 </div>
               </div>
             </div>
 
+            {/* Accepted Answers */}
             <div className="bg-white overflow-hidden shadow rounded-lg">
               <div className="p-5">
                 <div className="flex items-center">
                   <div className="flex-shrink-0">
-                    <div className="h-8 w-8 bg-purple-500 rounded-md flex items-center justify-center">
-                      <span className="text-white font-bold text-sm">0</span>
+                    <div className="h-8 w-8 bg-yellow-500 rounded-md flex items-center justify-center">
+                      <Award className="h-4 w-4 text-white" />
                     </div>
                   </div>
                   <div className="ml-5 w-0 flex-1">
                     <dl>
                       <dt className="text-sm font-medium text-gray-500 truncate">
-                        Badges Earned
+                        Accepted Answers
                       </dt>
-                      <dd className="text-lg font-medium text-gray-900">0</dd>
+                      <dd className="text-lg font-medium text-gray-900">{stats?.acceptedAnswers || 0}</dd>
                     </dl>
                   </div>
                 </div>
@@ -218,22 +231,55 @@ const Dashboard: React.FC = () => {
             </div>
           </div>
 
-          {/* Coming Soon */}
+          {/* Detailed Stats */}
+          {stats && (
+            <div className="mt-6 bg-white overflow-hidden shadow rounded-lg">
+              <div className="px-4 py-5 sm:p-6">
+                <h3 className="text-lg leading-6 font-medium text-gray-900 mb-4">
+                  Detailed Statistics
+                </h3>
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                  <div className="text-center">
+                    <p className="text-sm font-medium text-gray-500">Question Upvotes</p>
+                    <p className="text-2xl font-bold text-green-600">{stats.questionUpvotes}</p>
+                  </div>
+                  <div className="text-center">
+                    <p className="text-sm font-medium text-gray-500">Question Downvotes</p>
+                    <p className="text-2xl font-bold text-red-600">{stats.questionDownvotes}</p>
+                  </div>
+                  <div className="text-center">
+                    <p className="text-sm font-medium text-gray-500">Answer Upvotes</p>
+                    <p className="text-2xl font-bold text-green-600">{stats.answerUpvotes}</p>
+                  </div>
+                  <div className="text-center">
+                    <p className="text-sm font-medium text-gray-500">Answer Downvotes</p>
+                    <p className="text-2xl font-bold text-red-600">{stats.answerDownvotes}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Quick Actions */}
           <div className="mt-6 bg-white overflow-hidden shadow rounded-lg">
             <div className="px-4 py-5 sm:p-6">
-              <h3 className="text-lg leading-6 font-medium text-gray-900">
-                What's Next?
+              <h3 className="text-lg leading-6 font-medium text-gray-900 mb-4">
+                Quick Actions
               </h3>
-              <div className="mt-2 max-w-xl text-sm text-gray-500">
-                <p>Your StackIt account is ready! You can now:</p>
-              </div>
-              <div className="mt-4">
-                <ul className="list-disc list-inside space-y-2 text-sm text-gray-600">
-                  <li>Ask questions about programming and technology</li>
-                  <li>Answer questions from other community members</li>
-                  <li>Earn reputation points and badges</li>
-                  <li>Connect with developers worldwide</li>
-                </ul>
+              <div className="flex flex-wrap gap-4">
+                <Link
+                  to="/ask"
+                  className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                >
+                  <MessageSquare className="h-4 w-4 mr-2" />
+                  Ask a Question
+                </Link>
+                <Link
+                  to="/"
+                  className="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                >
+                  Browse Questions
+                </Link>
               </div>
             </div>
           </div>

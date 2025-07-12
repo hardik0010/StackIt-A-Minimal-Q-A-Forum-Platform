@@ -1,30 +1,32 @@
 const express = require('express');
 const { body, validationResult } = require('express-validator');
 const User = require('../models/User');
-const { protect, authorize, checkReputation } = require('../middleware/auth');
+const { protect, authorize } = require('../middleware/auth');
 
 const router = express.Router();
 
 // @route   GET /api/users
-// @desc    Get all users (with pagination and search)
-// @access  Public
-router.get('/', async (req, res) => {
+// @desc    Get all users with filtering and pagination
+// @access  Private (Admin only)
+router.get('/', protect, authorize('admin'), async (req, res) => {
   try {
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 20;
     const search = req.query.search || '';
-    const sortBy = req.query.sortBy || 'reputation';
+    const sortBy = req.query.sortBy || 'createdAt';
     const sortOrder = req.query.sortOrder === 'asc' ? 1 : -1;
 
     const skip = (page - 1) * limit;
 
-    // Build search query
-    const searchQuery = {};
+    // Build query
+    const query = {};
+    
     if (search) {
-      searchQuery.$or = [
+      query.$or = [
         { username: { $regex: search, $options: 'i' } },
         { 'profile.firstName': { $regex: search, $options: 'i' } },
-        { 'profile.lastName': { $regex: search, $options: 'i' } }
+        { 'profile.lastName': { $regex: search, $options: 'i' } },
+        { email: { $regex: search, $options: 'i' } }
       ];
     }
 
@@ -32,13 +34,13 @@ router.get('/', async (req, res) => {
     const sortQuery = {};
     sortQuery[sortBy] = sortOrder;
 
-    const users = await User.find(searchQuery)
-      .select('username profile reputation badges isVerified lastSeen createdAt')
+    const users = await User.find(query)
+      .select('username profile badges isVerified lastSeen createdAt')
       .sort(sortQuery)
       .skip(skip)
       .limit(limit);
 
-    const total = await User.countDocuments(searchQuery);
+    const total = await User.countDocuments(query);
 
     res.json({
       success: true,
@@ -64,11 +66,11 @@ router.get('/', async (req, res) => {
 
 // @route   GET /api/users/:id
 // @desc    Get user by ID
-// @access  Public
-router.get('/:id', async (req, res) => {
+// @access  Private
+router.get('/:id', protect, async (req, res) => {
   try {
     const user = await User.findById(req.params.id)
-      .select('username profile reputation badges isVerified lastSeen createdAt');
+      .select('username profile badges isVerified lastSeen createdAt');
 
     if (!user) {
       return res.status(404).json({
@@ -414,6 +416,84 @@ router.put('/:id/role', protect, authorize('admin'), [
     res.status(500).json({
       success: false,
       message: 'Server error while changing user role'
+    });
+  }
+});
+
+// @route   GET /api/users/stats
+// @desc    Get current user statistics
+// @access  Private
+router.get('/stats', protect, async (req, res) => {
+  try {
+    const Question = require('../models/Question');
+    const Answer = require('../models/Answer');
+
+    // Get questions asked by user
+    const questionsAsked = await Question.countDocuments({ author: req.user._id });
+    
+    // Get answers given by user
+    const answersGiven = await Answer.countDocuments({ author: req.user._id });
+    
+    // Get total upvotes received on questions
+    const questionUpvotes = await Question.aggregate([
+      { $match: { author: req.user._id } },
+      { $unwind: '$votes.upvotes' },
+      { $count: 'total' }
+    ]);
+    const totalQuestionUpvotes = questionUpvotes.length > 0 ? questionUpvotes[0].total : 0;
+    
+    // Get total upvotes received on answers
+    const answerUpvotes = await Answer.aggregate([
+      { $match: { author: req.user._id } },
+      { $unwind: '$votes.upvotes' },
+      { $count: 'total' }
+    ]);
+    const totalAnswerUpvotes = answerUpvotes.length > 0 ? answerUpvotes[0].total : 0;
+    
+    // Get total downvotes received on questions
+    const questionDownvotes = await Question.aggregate([
+      { $match: { author: req.user._id } },
+      { $unwind: '$votes.downvotes' },
+      { $count: 'total' }
+    ]);
+    const totalQuestionDownvotes = questionDownvotes.length > 0 ? questionDownvotes[0].total : 0;
+    
+    // Get total downvotes received on answers
+    const answerDownvotes = await Answer.aggregate([
+      { $match: { author: req.user._id } },
+      { $unwind: '$votes.downvotes' },
+      { $count: 'total' }
+    ]);
+    const totalAnswerDownvotes = answerDownvotes.length > 0 ? answerDownvotes[0].total : 0;
+
+    // Calculate total reputation (upvotes - downvotes)
+    const totalReputation = (totalQuestionUpvotes + totalAnswerUpvotes) - (totalQuestionDownvotes + totalAnswerDownvotes);
+
+    // Get accepted answers count
+    const acceptedAnswers = await Answer.countDocuments({ 
+      author: req.user._id, 
+      isAccepted: true 
+    });
+
+    res.json({
+      success: true,
+      data: {
+        questionsAsked,
+        answersGiven,
+        totalReputation,
+        acceptedAnswers,
+        questionUpvotes: totalQuestionUpvotes,
+        questionDownvotes: totalQuestionDownvotes,
+        answerUpvotes: totalAnswerUpvotes,
+        answerDownvotes: totalAnswerDownvotes
+      }
+    });
+
+  } catch (error) {
+    console.error('Get user stats error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error while fetching user statistics'
     });
   }
 });

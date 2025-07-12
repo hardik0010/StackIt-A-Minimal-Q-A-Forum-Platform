@@ -1,9 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { Search, Plus, MessageSquare, ThumbsUp, User, Calendar } from 'lucide-react';
+import { Search, Plus, MessageSquare, ThumbsUp, User as UserIcon, Calendar, Lock, Eye, AlertCircle } from 'lucide-react';
 import LoadingSpinner from '../components/LoadingSpinner';
+import { useGuestActions } from '../hooks/useGuestActions';
+import VoteButtons from '../components/VoteButtons';
+import Navbar from '../components/Navbar';
 import axios from 'axios';
+import toast from 'react-hot-toast';
 
 interface Question {
   _id: string;
@@ -20,12 +24,15 @@ interface Question {
   answers: any[];
   upvotes: number;
   downvotes: number;
-  createdAt: string;
+  voteCount: number;
   views: number;
+  createdAt: string;
+  userVote?: 'upvote' | 'downvote' | null;
 }
 
 const PublicDashboard: React.FC = () => {
   const { isAuthenticated, user } = useAuth();
+  const { handleGuestAction, requireAuth } = useGuestActions();
   const [questions, setQuestions] = useState<Question[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
@@ -57,7 +64,7 @@ const PublicDashboard: React.FC = () => {
   const filteredQuestions = Array.isArray(questions) ? questions.filter(question =>
     question.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
     question.content.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    question.tags.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase()))
+    (question.tags && question.tags.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase())))
   ) : [];
 
   const formatDate = (dateString: string) => {
@@ -71,68 +78,64 @@ const PublicDashboard: React.FC = () => {
     return date.toLocaleDateString();
   };
 
+  const handleVoteChange = (questionId: string, newVoteCount: number, newUserVote: 'upvote' | 'downvote' | null) => {
+    setQuestions(prevQuestions => 
+      prevQuestions.map(question => 
+        question._id === questionId 
+          ? { ...question, voteCount: newVoteCount, userVote: newUserVote }
+          : question
+      )
+    );
+  };
+
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <LoadingSpinner size="lg" text="Loading questions..." />
+      <div className="min-h-screen bg-gray-50">
+        <Navbar />
+        <div className="flex items-center justify-center min-h-screen">
+          <LoadingSpinner size="lg" text="Loading questions..." />
+        </div>
       </div>
     );
   }
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="bg-white shadow-sm border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-4">
-            <div className="flex items-center">
-              <div className="h-8 w-8 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-lg flex items-center justify-center">
-                <span className="text-white font-bold text-sm">S</span>
-              </div>
-              <h1 className="ml-3 text-xl font-semibold text-gray-900">StackIt</h1>
-            </div>
-            <div className="flex items-center space-x-4">
-              {isAuthenticated ? (
-                <>
-                  <Link
-                    to="/dashboard"
-                    className="flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors"
-                  >
-                    <User className="h-4 w-4 mr-2" />
-                    Dashboard
-                  </Link>
-                  <Link
-                    to="/ask"
-                    className="flex items-center px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors"
-                  >
-                    <Plus className="h-4 w-4 mr-2" />
-                    Ask Question
-                  </Link>
-                </>
-              ) : (
-                <>
-                  <Link
-                    to="/login"
-                    className="text-sm font-medium text-gray-700 hover:text-gray-900 transition-colors"
-                  >
-                    Login
-                  </Link>
-                  <Link
-                    to="/signup"
-                    className="flex items-center px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors"
-                  >
-                    Sign Up
-                  </Link>
-                </>
-              )}
-            </div>
-          </div>
-        </div>
-      </header>
+      <Navbar />
 
       {/* Main Content */}
       <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
         <div className="px-4 py-6 sm:px-0">
+          {/* Guest Notice Banner */}
+          {!isAuthenticated && (
+            <div className="bg-blue-50 border border-blue-200 rounded-lg mb-6">
+              <div className="px-4 py-4 sm:px-6">
+                <div className="flex items-start">
+                  <div className="flex-shrink-0">
+                    <Eye className="h-5 w-5 text-blue-400" />
+                  </div>
+                  <div className="ml-3 flex-1">
+                    <h3 className="text-sm font-medium text-blue-800">
+                      You're browsing as a guest
+                    </h3>
+                    <div className="mt-2 text-sm text-blue-700">
+                      <p>
+                        You can view questions and search content. To ask questions, vote, comment, or access all features, please{' '}
+                        <Link to="/signup" className="font-medium underline hover:text-blue-600">
+                          create an account
+                        </Link>{' '}
+                        or{' '}
+                        <Link to="/login" className="font-medium underline hover:text-blue-600">
+                          sign in
+                        </Link>.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Welcome Section */}
           <div className="bg-white overflow-hidden shadow rounded-lg mb-6">
             <div className="px-4 py-5 sm:p-6">
@@ -140,7 +143,7 @@ const PublicDashboard: React.FC = () => {
                 Welcome to StackIt
               </h2>
               <p className="text-gray-600 mb-4">
-                A community-driven platform for developers to ask questions, share knowledge, and grow together.
+                A community-driven platform for developers to ask questions, share knowledge, and learn from each other.
               </p>
               {!isAuthenticated && (
                 <div className="flex items-center space-x-4">
@@ -180,31 +183,16 @@ const PublicDashboard: React.FC = () => {
           </div>
 
           {/* Questions List */}
-          <div className="bg-white shadow rounded-lg">
-            <div className="px-4 py-5 sm:p-6">
-              <div className="flex justify-between items-center mb-4">
-                <h3 className="text-lg font-medium text-gray-900">
-                  Recent Questions
-                </h3>
-                {isAuthenticated && (
-                  <Link
-                    to="/ask"
-                    className="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                  >
-                    <Plus className="h-4 w-4 mr-1" />
-                    Ask Question
-                  </Link>
-                )}
-              </div>
-
-              {filteredQuestions.length === 0 ? (
-                <div className="text-center py-12">
+          <div className="space-y-4">
+            {filteredQuestions.length === 0 ? (
+              <div className="bg-white shadow rounded-lg">
+                <div className="px-4 py-5 sm:p-6 text-center">
                   <MessageSquare className="mx-auto h-12 w-12 text-gray-400" />
                   <h3 className="mt-2 text-sm font-medium text-gray-900">No questions found</h3>
                   <p className="mt-1 text-sm text-gray-500">
                     {searchTerm ? 'Try adjusting your search terms.' : 'Be the first to ask a question!'}
                   </p>
-                  {isAuthenticated && !searchTerm && (
+                  {isAuthenticated && (
                     <div className="mt-6">
                       <Link
                         to="/ask"
@@ -216,32 +204,49 @@ const PublicDashboard: React.FC = () => {
                     </div>
                   )}
                 </div>
-              ) : (
-                <div className="space-y-4">
-                  {filteredQuestions.map((question) => (
-                    <div key={question._id} className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
-                      <div className="flex items-start space-x-4">
-                        {/* Vote Stats */}
-                        <div className="flex flex-col items-center space-y-1 min-w-[60px]">
-                          <div className="flex items-center space-x-1">
-                            <ThumbsUp className="h-4 w-4 text-gray-400" />
-                            <span className="text-sm font-medium text-gray-900">{question.upvotes}</span>
-                          </div>
-                          <div className="text-xs text-gray-500">{question.answers.length} answers</div>
-                          <div className="text-xs text-gray-500">{question.views} views</div>
+              </div>
+            ) : (
+              filteredQuestions.map((question) => (
+                <div key={question._id} className="bg-white shadow rounded-lg hover:shadow-md transition-shadow">
+                  <div className="px-4 py-5 sm:p-6">
+                    <div className="flex space-x-4">
+                      {/* Voting Section */}
+                      <div className="flex-shrink-0">
+                        <VoteButtons
+                          itemId={question._id}
+                          itemType="question"
+                          initialVoteCount={question.voteCount || 0}
+                          userVote={question.userVote || null}
+                          onVoteChange={(newVoteCount, newUserVote) => 
+                            handleVoteChange(question._id, newVoteCount, newUserVote)
+                          }
+                        />
+                      </div>
+
+                      {/* Question Content */}
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center space-x-2 mb-2">
+                          <Link
+                            to={`/question/${question._id}`}
+                            className="text-lg font-medium text-gray-900 hover:text-blue-600 transition-colors"
+                          >
+                            {question.title}
+                          </Link>
+                          {question.answers && question.answers.length > 0 && (
+                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                              {question.answers.length} answer{question.answers.length !== 1 ? 's' : ''}
+                            </span>
+                          )}
                         </div>
 
-                        {/* Question Content */}
-                        <div className="flex-1 min-w-0">
-                          <h4 className="text-lg font-medium text-gray-900 hover:text-blue-600 cursor-pointer">
-                            {question.title}
-                          </h4>
-                          <p className="mt-1 text-sm text-gray-600 line-clamp-2">
-                            {question.content}
-                          </p>
-                          
-                          {/* Tags */}
-                          <div className="mt-2 flex flex-wrap gap-2">
+                        <p className="text-gray-600 text-sm mb-3 line-clamp-2">
+                          {question.content.replace(/<[^>]*>/g, '').substring(0, 200)}
+                          {question.content.length > 200 && '...'}
+                        </p>
+
+                        {/* Tags */}
+                        {question.tags && question.tags.length > 0 && (
+                          <div className="flex flex-wrap gap-2 mb-3">
                             {question.tags.map((tag, index) => (
                               <span
                                 key={index}
@@ -251,27 +256,35 @@ const PublicDashboard: React.FC = () => {
                               </span>
                             ))}
                           </div>
+                        )}
 
-                          {/* Meta Info */}
-                          <div className="mt-3 flex items-center space-x-4 text-xs text-gray-500">
+                        {/* Meta Information */}
+                        <div className="flex items-center justify-between text-sm text-gray-500">
+                          <div className="flex items-center space-x-4">
                             <div className="flex items-center">
-                              <User className="h-3 w-3 mr-1" />
-                              {question.author.profile?.firstName && question.author.profile?.lastName
-                                ? `${question.author.profile.firstName} ${question.author.profile.lastName}`
-                                : question.author.username}
+                              <UserIcon className="h-4 w-4 mr-1" />
+                              <span>
+                                {question.author?.profile?.firstName && question.author?.profile?.lastName
+                                  ? `${question.author.profile.firstName} ${question.author.profile.lastName}`
+                                  : question.author?.username || 'Anonymous'}
+                              </span>
                             </div>
                             <div className="flex items-center">
-                              <Calendar className="h-3 w-3 mr-1" />
-                              {formatDate(question.createdAt)}
+                              <Calendar className="h-4 w-4 mr-1" />
+                              <span>{formatDate(question.createdAt || new Date().toISOString())}</span>
+                            </div>
+                            <div className="flex items-center">
+                              <Eye className="h-4 w-4 mr-1" />
+                              <span>{question.views || 0} views</span>
                             </div>
                           </div>
                         </div>
                       </div>
                     </div>
-                  ))}
+                  </div>
                 </div>
-              )}
-            </div>
+              ))
+            )}
           </div>
         </div>
       </main>

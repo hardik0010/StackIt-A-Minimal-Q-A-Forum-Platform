@@ -142,10 +142,10 @@ const sendWelcomeEmail = async (email, username) => {
             <div style="background: #f8f9fa; padding: 20px; border-radius: 10px; margin: 20px 0;">
               <h3 style="color: #333; margin-top: 0;">What you can do now:</h3>
               <ul style="color: #666; line-height: 1.8;">
-                <li>Ask questions about programming and development</li>
-                <li>Answer questions and help other developers</li>
-                <li>Build your reputation and earn badges</li>
-                <li>Connect with developers from around the world</li>
+                <li>Ask questions and get answers from the community</li>
+                <li>Share your knowledge and help others</li>
+                <li>Connect with developers worldwide</li>
+                <li>Earn badges for your contributions</li>
               </ul>
             </div>
             

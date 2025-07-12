@@ -2,8 +2,8 @@ import React, { createContext, useContext, useState, useEffect, ReactNode } from
 import axios from 'axios';
 import toast from 'react-hot-toast';
 
-interface User {
-  id: string;
+export interface User {
+  _id: string;
   username: string;
   email: string;
   profile: {
@@ -11,8 +11,14 @@ interface User {
     lastName: string;
     bio?: string;
     avatar?: string;
+    location?: string;
+    website?: string;
   };
-  reputation: number;
+  preferences?: {
+    emailNotifications: boolean;
+    pushNotifications: boolean;
+    theme: 'light' | 'dark' | 'auto';
+  };
   isVerified: boolean;
   createdAt: string;
 }

@@ -2,7 +2,7 @@ const express = require('express');
 const { body, validationResult } = require('express-validator');
 const Answer = require('../models/Answer');
 const Question = require('../models/Question');
-const { protect, checkReputation } = require('../middleware/auth');
+const { protect } = require('../middleware/auth');
 
 const router = express.Router();
 
@@ -23,7 +23,7 @@ router.get('/question/:questionId', async (req, res) => {
     sortQuery[sortBy] = sortOrder;
 
     const answers = await Answer.find({ question: req.params.questionId })
-      .populate('author', 'username profile.firstName profile.lastName reputation')
+      .populate('author', 'username profile.firstName profile.lastName')
       .populate('comments.author', 'username profile.firstName profile.lastName')
       .populate('votes.upvotes.user', 'username')
       .populate('votes.downvotes.user', 'username')
@@ -61,7 +61,7 @@ router.get('/question/:questionId', async (req, res) => {
 router.get('/:id', async (req, res) => {
   try {
     const answer = await Answer.findById(req.params.id)
-      .populate('author', 'username profile.firstName profile.lastName reputation')
+      .populate('author', 'username profile.firstName profile.lastName')
       .populate('comments.author', 'username profile.firstName profile.lastName')
       .populate('votes.upvotes.user', 'username')
       .populate('votes.downvotes.user', 'username');
@@ -90,7 +90,7 @@ router.get('/:id', async (req, res) => {
 // @route   POST /api/answers
 // @desc    Create a new answer
 // @access  Private
-router.post('/', protect, checkReputation(1), [
+router.post('/', protect, [
   body('content')
     .isLength({ min: 20 })
     .withMessage('Content must be at least 20 characters long'),
@@ -144,7 +144,7 @@ router.post('/', protect, checkReputation(1), [
     await question.updateAnswerCount();
 
     // Populate author info
-    await answer.populate('author', 'username profile.firstName profile.lastName reputation');
+    await answer.populate('author', 'username profile.firstName profile.lastName');
 
     res.status(201).json({
       success: true,
@@ -210,7 +210,7 @@ router.put('/:id', protect, [
     await answer.save();
 
     // Populate author info
-    await answer.populate('author', 'username profile.firstName profile.lastName reputation');
+    await answer.populate('author', 'username profile.firstName profile.lastName');
 
     res.json({
       success: true,
@@ -274,7 +274,7 @@ router.delete('/:id', protect, async (req, res) => {
 // @route   POST /api/answers/:id/vote
 // @desc    Vote on an answer
 // @access  Private
-router.post('/:id/vote', protect, checkReputation(15), [
+router.post('/:id/vote', protect, [
   body('voteType')
     .isIn(['upvote', 'downvote'])
     .withMessage('Vote type must be upvote or downvote')
@@ -303,7 +303,7 @@ router.post('/:id/vote', protect, checkReputation(15), [
     if (!answer.canUserVote(req.user)) {
       return res.status(403).json({
         success: false,
-        message: 'Minimum reputation of 15 required to vote'
+        message: 'You are not authorized to vote'
       });
     }
 
@@ -311,7 +311,7 @@ router.post('/:id/vote', protect, checkReputation(15), [
     if (voteType === 'downvote' && !answer.canUserDownvote(req.user)) {
       return res.status(403).json({
         success: false,
-        message: 'Minimum reputation of 125 required to downvote'
+        message: 'You are not authorized to downvote'
       });
     }
 
@@ -326,7 +326,7 @@ router.post('/:id/vote', protect, checkReputation(15), [
     await answer.addVote(req.user._id, voteType);
 
     // Populate author info
-    await answer.populate('author', 'username profile.firstName profile.lastName reputation');
+    await answer.populate('author', 'username profile.firstName profile.lastName');
 
     res.json({
       success: true,
@@ -384,7 +384,7 @@ router.post('/:id/accept', protect, async (req, res) => {
     await answer.acceptAnswer(req.user._id);
 
     // Populate author info
-    await answer.populate('author', 'username profile.firstName profile.lastName reputation');
+    await answer.populate('author', 'username profile.firstName profile.lastName');
 
     res.json({
       success: true,
@@ -442,7 +442,7 @@ router.post('/:id/unaccept', protect, async (req, res) => {
     await answer.unacceptAnswer();
 
     // Populate author info
-    await answer.populate('author', 'username profile.firstName profile.lastName reputation');
+    await answer.populate('author', 'username profile.firstName profile.lastName');
 
     res.json({
       success: true,
@@ -462,7 +462,7 @@ router.post('/:id/unaccept', protect, async (req, res) => {
 // @route   POST /api/answers/:id/comments
 // @desc    Add a comment to an answer
 // @access  Private
-router.post('/:id/comments', protect, checkReputation(50), [
+router.post('/:id/comments', protect, [
   body('content')
     .isLength({ min: 1, max: 500 })
     .withMessage('Comment must be between 1 and 500 characters')
@@ -490,7 +490,7 @@ router.post('/:id/comments', protect, checkReputation(50), [
     await answer.addComment(req.user._id, content);
 
     // Populate author info
-    await answer.populate('author', 'username profile.firstName profile.lastName reputation');
+    await answer.populate('author', 'username profile.firstName profile.lastName');
     await answer.populate('comments.author', 'username profile.firstName profile.lastName');
 
     res.json({
@@ -539,7 +539,7 @@ router.put('/:id/comments/:commentId', protect, [
     await answer.updateComment(req.params.commentId, req.user._id, content);
 
     // Populate author info
-    await answer.populate('author', 'username profile.firstName profile.lastName reputation');
+    await answer.populate('author', 'username profile.firstName profile.lastName');
     await answer.populate('comments.author', 'username profile.firstName profile.lastName');
 
     res.json({
@@ -579,7 +579,7 @@ router.delete('/:id/comments/:commentId', protect, async (req, res) => {
     await answer.removeComment(req.params.commentId, req.user._id);
 
     // Populate author info
-    await answer.populate('author', 'username profile.firstName profile.lastName reputation');
+    await answer.populate('author', 'username profile.firstName profile.lastName');
     await answer.populate('comments.author', 'username profile.firstName profile.lastName');
 
     res.json({

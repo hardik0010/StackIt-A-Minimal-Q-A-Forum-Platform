@@ -185,18 +185,16 @@ questionSchema.methods.updateAnswerCount = function() {
     });
 };
 
-// Method to check if user can vote (reputation check)
+// Method to check if user can vote (no reputation check needed)
 questionSchema.methods.canUserVote = function(user) {
   if (!user) return false;
-  if (user.role === 'admin') return true;
-  return user.reputation >= 15; // Minimum reputation to vote
+  return true; // All authenticated users can vote
 };
 
-// Method to check if user can downvote
+// Method to check if user can downvote (no reputation check needed)
 questionSchema.methods.canUserDownvote = function(user) {
   if (!user) return false;
-  if (user.role === 'admin') return true;
-  return user.reputation >= 125; // Higher reputation required for downvoting
+  return true; // All authenticated users can downvote
 };
 
 // Ensure virtual fields are serialized
