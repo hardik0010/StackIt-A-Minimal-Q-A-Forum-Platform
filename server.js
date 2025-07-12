@@ -50,6 +50,7 @@ app.use('/api/questions', require('./routes/questions'));
 app.use('/api/answers', require('./routes/answers'));
 app.use('/api/tags', require('./routes/tags'));
 app.use('/api/notifications', require('./routes/notifications'));
+app.use('/api/admin', require('./routes/admin'));
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {

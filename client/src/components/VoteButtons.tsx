@@ -41,8 +41,9 @@ const VoteButtons: React.FC<VoteButtonsProps> = ({
       const response = await axios.post(endpoint, { voteType });
 
       if (response.data.success) {
-        const newVoteCount = response.data.data[itemType].voteCount;
-        const newUserVote = response.data.data[itemType].userVote;
+        const item = response.data.data[itemType];
+        const newVoteCount = item.voteCount;
+        const newUserVote = item.userVote;
         
         setVoteCount(newVoteCount);
         setCurrentUserVote(newUserVote);
@@ -66,7 +67,7 @@ const VoteButtons: React.FC<VoteButtonsProps> = ({
     const baseClass = "flex items-center justify-center w-8 h-8 rounded-md transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500";
     
     if (currentUserVote === voteType) {
-      return `${baseClass} bg-blue-100 text-blue-600 hover:bg-blue-200`;
+      return `${baseClass} bg-blue-500 text-white hover:bg-blue-600`;
     }
     
     return `${baseClass} bg-gray-100 text-gray-600 hover:bg-gray-200 hover:text-gray-800`;

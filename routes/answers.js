@@ -328,6 +328,9 @@ router.post('/:id/vote', protect, [
     // Populate author info
     await answer.populate('author', 'username profile.firstName profile.lastName');
 
+    // Add user vote information
+    answer.userVote = answer.hasUserVoted(req.user._id);
+
     res.json({
       success: true,
       message: 'Vote recorded successfully',

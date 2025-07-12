@@ -145,14 +145,14 @@ const Dashboard: React.FC = () => {
           </div>
 
           {/* Stats */}
-          <div className="mt-6 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="mt-6 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
             {/* Questions Asked */}
             <div className="bg-white overflow-hidden shadow rounded-lg">
               <div className="p-5">
                 <div className="flex items-center">
                   <div className="flex-shrink-0">
                     <div className="h-8 w-8 bg-blue-500 rounded-md flex items-center justify-center">
-                      <span className="text-white font-bold text-sm">{stats?.questionsAsked || 0}</span>
+                      <span className="text-white font-bold text-sm">{stats?.questionsAsked ?? 0}</span>
                     </div>
                   </div>
                   <div className="ml-5 w-0 flex-1">
@@ -160,7 +160,7 @@ const Dashboard: React.FC = () => {
                       <dt className="text-sm font-medium text-gray-500 truncate">
                         Questions Asked
                       </dt>
-                      <dd className="text-lg font-medium text-gray-900">{stats?.questionsAsked || 0}</dd>
+                      <dd className="text-lg font-medium text-gray-900">{stats?.questionsAsked ?? 0}</dd>
                     </dl>
                   </div>
                 </div>
@@ -173,7 +173,7 @@ const Dashboard: React.FC = () => {
                 <div className="flex items-center">
                   <div className="flex-shrink-0">
                     <div className="h-8 w-8 bg-green-500 rounded-md flex items-center justify-center">
-                      <span className="text-white font-bold text-sm">{stats?.answersGiven || 0}</span>
+                      <span className="text-white font-bold text-sm">{stats?.answersGiven ?? 0}</span>
                     </div>
                   </div>
                   <div className="ml-5 w-0 flex-1">
@@ -181,28 +181,7 @@ const Dashboard: React.FC = () => {
                       <dt className="text-sm font-medium text-gray-500 truncate">
                         Answers Given
                       </dt>
-                      <dd className="text-lg font-medium text-gray-900">{stats?.answersGiven || 0}</dd>
-                    </dl>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Reputation */}
-            <div className="bg-white overflow-hidden shadow rounded-lg">
-              <div className="p-5">
-                <div className="flex items-center">
-                  <div className="flex-shrink-0">
-                    <div className="h-8 w-8 bg-purple-500 rounded-md flex items-center justify-center">
-                      <TrendingUp className="h-4 w-4 text-white" />
-                    </div>
-                  </div>
-                  <div className="ml-5 w-0 flex-1">
-                    <dl>
-                      <dt className="text-sm font-medium text-gray-500 truncate">
-                        Reputation
-                      </dt>
-                      <dd className="text-lg font-medium text-gray-900">{stats?.totalReputation || 0}</dd>
+                      <dd className="text-lg font-medium text-gray-900">{stats?.answersGiven ?? 0}</dd>
                     </dl>
                   </div>
                 </div>
@@ -223,7 +202,7 @@ const Dashboard: React.FC = () => {
                       <dt className="text-sm font-medium text-gray-500 truncate">
                         Accepted Answers
                       </dt>
-                      <dd className="text-lg font-medium text-gray-900">{stats?.acceptedAnswers || 0}</dd>
+                      <dd className="text-lg font-medium text-gray-900">{stats?.acceptedAnswers ?? 0}</dd>
                     </dl>
                   </div>
                 </div>

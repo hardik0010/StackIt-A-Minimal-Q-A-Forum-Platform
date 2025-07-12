@@ -1,7 +1,16 @@
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
-const jwt = require('jsonwebtoken');
+require('dotenv').config();
 
+// Connect to MongoDB
+mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/stackit', {
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
+})
+.then(() => console.log('MongoDB connected for admin user creation'))
+.catch(err => console.error('MongoDB connection error:', err));
+
+// User Schema (same as in models/User.js)
 const userSchema = new mongoose.Schema({
   username: {
     type: String,
@@ -97,10 +106,6 @@ const userSchema = new mongoose.Schema({
   timestamps: true
 });
 
-// Index for better query performance
-userSchema.index({ username: 1 });
-userSchema.index({ email: 1 });
-
 // Hash password before saving
 userSchema.pre('save', async function(next) {
   if (!this.isModified('password')) return next();
@@ -114,49 +119,49 @@ userSchema.pre('save', async function(next) {
   }
 });
 
-// Compare password method
-userSchema.methods.comparePassword = async function(candidatePassword) {
-  // If password is not loaded, we need to fetch it
-  if (!this.password) {
-    const user = await this.constructor.findById(this._id).select('+password');
-    if (!user) return false;
-    return await bcrypt.compare(candidatePassword, user.password);
+const User = mongoose.model('User', userSchema);
+
+async function createAdminUser() {
+  try {
+    // Check if admin user already exists
+    const existingAdmin = await User.findOne({ role: 'admin' });
+    if (existingAdmin) {
+      console.log('Admin user already exists:');
+      console.log(`Username: ${existingAdmin.username}`);
+      console.log(`Email: ${existingAdmin.email}`);
+      console.log(`Role: ${existingAdmin.role}`);
+      return;
+    }
+
+    // Create admin user
+    const adminUser = new User({
+      username: 'admin',
+      email: 'admin@stackit.com',
+      password: 'admin123456',
+      role: 'admin',
+      profile: {
+        firstName: 'Admin',
+        lastName: 'User',
+        bio: 'System Administrator'
+      },
+      isVerified: true
+    });
+
+    await adminUser.save();
+
+    console.log('Admin user created successfully!');
+    console.log('Username: admin');
+    console.log('Email: admin@stackit.com');
+    console.log('Password: admin123456');
+    console.log('\n⚠️  IMPORTANT: Change the password after first login!');
+    console.log('\nYou can now access the admin panel at: http://localhost:3000/admin/login');
+
+  } catch (error) {
+    console.error('Error creating admin user:', error);
+  } finally {
+    mongoose.connection.close();
   }
-  return await bcrypt.compare(candidatePassword, this.password);
-};
+}
 
-// Generate JWT token
-userSchema.methods.generateAuthToken = function() {
-  return jwt.sign(
-    { 
-      id: this._id, 
-      username: this.username, 
-      email: this.email, 
-      role: this.role 
-    },
-    process.env.JWT_SECRET,
-    { expiresIn: process.env.JWT_EXPIRE || '7d' }
-  );
-};
-
-// Get public profile (without sensitive data)
-userSchema.methods.getPublicProfile = function() {
-  return {
-    id: this._id,
-    username: this.username,
-    email: this.email, // <-- Add this line
-    profile: this.profile,
-    badges: this.badges,
-    isVerified: this.isVerified,
-    lastSeen: this.lastSeen,
-    createdAt: this.createdAt
-  };
-};
-
-// Update last seen
-userSchema.methods.updateLastSeen = function() {
-  this.lastSeen = new Date();
-  return this.save();
-};
-
-module.exports = mongoose.model('User', userSchema); 
+// Run the script
+createAdminUser(); 

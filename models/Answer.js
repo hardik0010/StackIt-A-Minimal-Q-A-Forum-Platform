@@ -140,15 +140,24 @@ answerSchema.methods.addVote = function(userId, voteType) {
     createdAt: new Date()
   };
 
-  // Remove existing vote
-  this.votes.upvotes = this.votes.upvotes.filter(vote => vote.user.toString() !== userId.toString());
-  this.votes.downvotes = this.votes.downvotes.filter(vote => vote.user.toString() !== userId.toString());
+  const currentVote = this.hasUserVoted(userId);
 
-  // Add new vote
-  if (voteType === 'upvote') {
-    this.votes.upvotes.push(voteData);
-  } else if (voteType === 'downvote') {
-    this.votes.downvotes.push(voteData);
+  // If clicking the same vote type, remove the vote (toggle off)
+  if (currentVote === voteType) {
+    if (voteType === 'upvote') {
+      this.votes.upvotes = this.votes.upvotes.filter(vote => vote.user.toString() !== userId.toString());
+    } else {
+      this.votes.downvotes = this.votes.downvotes.filter(vote => vote.user.toString() !== userId.toString());
+    }
+  } else {
+    // Remove existing vote of opposite type
+    if (voteType === 'upvote') {
+      this.votes.downvotes = this.votes.downvotes.filter(vote => vote.user.toString() !== userId.toString());
+      this.votes.upvotes.push(voteData);
+    } else {
+      this.votes.upvotes = this.votes.upvotes.filter(vote => vote.user.toString() !== userId.toString());
+      this.votes.downvotes.push(voteData);
+    }
   }
 
   return this.save();
