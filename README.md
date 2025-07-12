@@ -1,12 +1,39 @@
-# StackIt - Q&A Forum Platform
+# StackIt - Q&A Platform
 
-A modern Q&A forum platform built with Node.js, Express, React, and MongoDB. Features include user authentication, question/answer management, and a beautiful responsive UI.
+A community-driven Q&A platform for developers to ask questions, share knowledge, and grow together.
 
-## 🚀 Quick Start
+## Features
+
+### Public Dashboard
+- **No login required** to browse questions and answers
+- Search functionality to find questions by title, content, or tags
+- View question details, votes, answers, and author information
+- Responsive design with modern UI
+
+### User Authentication
+- User registration and login
+- JWT-based authentication
+- Password reset functionality
+- User profiles with reputation system
+
+### Question Management
+- **Authenticated users only** can post questions
+- Rich text editor for question content
+- Tag system for better categorization
+- Vote system (upvote/downvote)
+- Question status tracking (open, closed, etc.)
+
+### Answer System
+- **Authenticated users only** can post answers
+- Vote system for answers
+- Accept best answer functionality
+- Answer editing and moderation
+
+## Getting Started
 
 ### Prerequisites
 - Node.js (v14 or higher)
-- MongoDB (local or cloud)
+- MongoDB
 - npm or yarn
 
 ### Installation
@@ -14,179 +41,122 @@ A modern Q&A forum platform built with Node.js, Express, React, and MongoDB. Fea
 1. **Clone the repository**
    ```bash
    git clone <repository-url>
-   cd Stack_It
+   cd StackIt
    ```
 
 2. **Install dependencies**
    ```bash
-   npm run install-all
+   # Install backend dependencies
+   npm install
+   
+   # Install frontend dependencies
+   cd client
+   npm install
+   cd ..
    ```
 
 3. **Environment Setup**
    ```bash
+   # Copy environment variables
    cp env.example .env
-   ```
    
-   Edit `.env` file with your configuration:
-   ```env
-   # Database
+   # Edit .env file with your configuration
    MONGODB_URI=mongodb://localhost:27017/stackit
-   
-   # JWT
-   JWT_SECRET=your-super-secret-jwt-key
-   
-   # Email (for password reset)
-   EMAIL_USER=your-email@gmail.com
-   EMAIL_PASS=your-app-password
-   CLIENT_URL=http://localhost:3000
+   JWT_SECRET=your_jwt_secret_here
+   JWT_EXPIRE=7d
    ```
 
-### Running the Application
-
-#### Option 1: Run Both Servers Together (Recommended)
-```bash
-npm run dev-full
-```
-
-#### Option 2: Run Servers Separately
-```bash
-# Terminal 1 - Backend
-npm run dev
-
-# Terminal 2 - Frontend
-npm run client
-```
-
-#### Option 3: Windows Batch Script
-```bash
-start.bat
-```
-
-### Access the Application
-- **Frontend**: http://localhost:3000
-- **Backend API**: http://localhost:5000
-- **API Health Check**: http://localhost:5000/api/health
-
-## ✨ New Features
-
-### 🔐 Enhanced Authentication
-- **Specific Login Error Messages**: Clear feedback for different login failures
-- **Forgot Password System**: Email-based password reset with secure tokens
-- **Welcome Emails**: Automatic welcome emails for new users
-- **Professional Email Templates**: Beautiful HTML emails
-
-### 🎨 User Experience Improvements
-- **Loading States**: Consistent loading indicators
-- **Toast Notifications**: Success/error feedback
-- **Responsive Design**: Works on all devices
-- **Modern UI**: Gradient backgrounds and smooth animations
-
-## 🧪 Testing the Features
-
-### 1. Test Enhanced Login Error Handling
-1. Go to http://localhost:3000/login
-2. Try logging in with a non-existent email
-3. Try logging in with correct email but wrong password
-4. Verify you see specific, helpful error messages
-
-### 2. Test Forgot Password System
-1. Go to http://localhost:3000/forgot-password
-2. Enter a registered email address
-3. Check your email for the reset link
-4. Click the link and reset your password
-5. Try logging in with the new password
-
-### 3. Test Registration & Welcome Email
-1. Go to http://localhost:3000/signup
-2. Create a new account
-3. Check your email for the welcome message
-
-## 📧 Email Setup
-
-### For Development (Gmail)
-1. Enable 2-factor authentication on your Gmail account
-2. Generate an App Password:
-   - Go to Google Account settings
-   - Security → 2-Step Verification → App passwords
-   - Generate a new app password for "Mail"
-3. Add to `.env`:
-   ```env
-   EMAIL_USER=your-email@gmail.com
-   EMAIL_PASS=your-app-password
+4. **Start the application**
+   ```bash
+   # On Windows
+   start.bat
+   
+   # On Unix/Linux/Mac
+   npm run dev-full
    ```
 
-### For Production
-Use services like SendGrid, AWS SES, or Mailgun:
-```env
-SMTP_HOST=smtp.your-provider.com
-SMTP_PORT=587
-SMTP_SECURE=false
-SMTP_USER=your-smtp-username
-SMTP_PASS=your-smtp-password
-```
+   Or start manually:
+   ```bash
+   # Terminal 1 - Backend (Port 5000)
+   npm run dev
+   
+   # Terminal 2 - Frontend (Port 3000)
+   cd client && npm start
+   ```
 
-## 🏗️ Project Structure
+## Usage
+
+### For Visitors (No Account Required)
+1. Visit `http://localhost:3000`
+2. Browse questions on the public dashboard
+3. Search for specific topics using the search bar
+4. View question details and answers
+5. Click "Sign Up" or "Login" to participate
+
+### For Registered Users
+1. **Sign up** for a new account or **login** with existing credentials
+2. **Ask Questions**: Click "Ask Question" button (requires authentication)
+3. **Answer Questions**: Provide helpful answers to other users' questions
+4. **Vote**: Upvote good questions/answers, downvote poor ones (requires reputation)
+5. **Build Reputation**: Earn points for helpful contributions
+
+### Navigation
+- **Home** (`/`): Public dashboard with all questions
+- **Dashboard** (`/dashboard`): User-specific dashboard (requires login)
+- **Ask Question** (`/ask`): Post new questions (requires login)
+- **Login** (`/login`): User authentication
+- **Sign Up** (`/signup`): Create new account
+
+## API Endpoints
+
+### Public Endpoints
+- `GET /api/questions` - Get all questions
+- `GET /api/questions/:id` - Get specific question
+- `GET /api/tags` - Get all tags
+
+### Protected Endpoints (Require Authentication)
+- `POST /api/questions` - Create new question
+- `PUT /api/questions/:id` - Update question
+- `POST /api/answers` - Post answer
+- `POST /api/questions/:id/vote` - Vote on question
+- `GET /api/auth/me` - Get current user info
+
+## Technology Stack
+
+### Backend
+- **Node.js** with Express.js
+- **MongoDB** with Mongoose ODM
+- **JWT** for authentication
+- **bcryptjs** for password hashing
+- **express-validator** for input validation
+- **helmet** for security headers
+
+### Frontend
+- **React** with TypeScript
+- **React Router** for navigation
+- **Tailwind CSS** for styling
+- **Axios** for API calls
+- **React Hot Toast** for notifications
+- **Lucide React** for icons
+
+## Project Structure
 
 ```
-Stack_It/
+StackIt/
 ├── client/                 # React frontend
 │   ├── src/
 │   │   ├── components/     # Reusable components
 │   │   ├── contexts/       # React contexts
 │   │   ├── pages/          # Page components
 │   │   └── App.tsx         # Main app component
-│   └── package.json
+├── models/                 # MongoDB models
 ├── routes/                 # API routes
-│   ├── auth.js            # Authentication routes
-│   ├── questions.js       # Question routes
-│   └── ...
-├── models/                # MongoDB models
-├── middleware/            # Express middleware
-├── utils/                 # Utility functions
-│   └── emailService.js    # Email functionality
-├── server.js              # Express server
-└── package.json
+├── middleware/             # Express middleware
+├── utils/                  # Utility functions
+└── server.js              # Express server
 ```
 
-## 🔧 API Endpoints
-
-### Authentication
-- `POST /api/auth/register` - User registration
-- `POST /api/auth/login` - User login
-- `POST /api/auth/forgot-password` - Request password reset
-- `POST /api/auth/reset-password` - Reset password with token
-- `POST /api/auth/logout` - User logout
-- `GET /api/auth/me` - Get current user profile
-
-### Questions & Answers
-- `GET /api/questions` - Get all questions
-- `POST /api/questions` - Create new question
-- `GET /api/questions/:id` - Get specific question
-- `PUT /api/questions/:id` - Update question
-- `DELETE /api/questions/:id` - Delete question
-
-## 🛡️ Security Features
-
-- **Rate Limiting**: Prevents abuse of API endpoints
-- **JWT Authentication**: Secure token-based authentication
-- **Password Hashing**: bcrypt for password security
-- **Input Validation**: Express-validator for data validation
-- **CORS Protection**: Configured for security
-- **Helmet**: Security headers
-
-## 🚀 Deployment
-
-### Backend Deployment
-1. Set up environment variables
-2. Configure MongoDB connection
-3. Set up email service
-4. Deploy to your preferred platform (Heroku, Vercel, etc.)
-
-### Frontend Deployment
-1. Build the React app: `cd client && npm run build`
-2. Deploy the `build` folder to your hosting service
-
-## 🤝 Contributing
+## Contributing
 
 1. Fork the repository
 2. Create a feature branch
@@ -194,26 +164,10 @@ Stack_It/
 4. Test thoroughly
 5. Submit a pull request
 
-## 📝 License
+## License
 
 This project is licensed under the MIT License.
 
-## 🆘 Support
+## Support
 
-For issues or questions:
-1. Check the server logs for error details
-2. Verify environment configuration
-3. Test email setup
-4. Review the documentation
-
----
-
-**Happy Coding! 🎉** 
-
-## Security Notice
-
-**Never commit your `.env` file or any secret API keys to GitHub or any public repository.**
-
-- Use the provided `.env.example` as a template for your environment variables.
-- Add your actual secrets to a local `.env` file, which is already gitignored.
-- If you accidentally commit secrets, rotate them immediately and remove them from your commit history. 
+For support and questions, please open an issue in the repository. 

@@ -1,18 +1,48 @@
 const nodemailer = require('nodemailer');
 const sendGridTransport = require('nodemailer-sendgrid-transport');
 
-// Create transporter using SendGrid
+// Create transporter with fallback options
 const createTransporter = () => {
-  if (!process.env.SENDGRID_API_KEY) {
-    throw new Error('SENDGRID_API_KEY is not set in environment variables.');
+  // Try SendGrid first if API key is available
+  if (process.env.SENDGRID_API_KEY) {
+    try {
+      return nodemailer.createTransport(
+        sendGridTransport({
+          auth: {
+            api_key: process.env.SENDGRID_API_KEY
+          }
+        })
+      );
+    } catch (error) {
+      console.error('SendGrid configuration error:', error);
+    }
   }
-  return nodemailer.createTransport(
-    sendGridTransport({
+
+  // Fallback to SMTP
+  if (process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS) {
+    return nodemailer.createTransport({
+      host: process.env.SMTP_HOST,
+      port: process.env.SMTP_PORT || 587,
+      secure: process.env.SMTP_SECURE === 'true',
       auth: {
-        api_key: process.env.SENDGRID_API_KEY
+        user: process.env.SMTP_USER,
+        pass: process.env.SMTP_PASS
       }
-    })
-  );
+    });
+  }
+
+  // Development fallback - log emails instead of sending
+  console.warn('No email configuration found. Emails will be logged to console instead of sent.');
+  return {
+    sendMail: async (options) => {
+      console.log('=== EMAIL WOULD BE SENT ===');
+      console.log('To:', options.to);
+      console.log('Subject:', options.subject);
+      console.log('Content:', options.html);
+      console.log('==========================');
+      return { messageId: 'dev-' + Date.now() };
+    }
+  };
 };
 
 // Send password reset email
@@ -23,7 +53,7 @@ const sendPasswordResetEmail = async (email, resetToken, username) => {
     const resetUrl = `${process.env.CLIENT_URL || 'http://localhost:3000'}/forgot-password?token=${resetToken}`;
     
     const mailOptions = {
-      from: process.env.EMAIL_FROM || 'noreply@stackit.com',
+      from: process.env.EMAIL_FROM || process.env.SMTP_USER || 'noreply@stackit.com',
       to: email,
       subject: 'Reset Your StackIt Password',
       html: `
@@ -91,7 +121,7 @@ const sendWelcomeEmail = async (email, username) => {
     const transporter = createTransporter();
     
     const mailOptions = {
-      from: process.env.EMAIL_FROM || 'noreply@stackit.com',
+      from: process.env.EMAIL_FROM || process.env.SMTP_USER || 'noreply@stackit.com',
       to: email,
       subject: 'Welcome to StackIt!',
       html: `

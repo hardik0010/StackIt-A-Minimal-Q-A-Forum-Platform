@@ -121,6 +121,12 @@ userSchema.pre('save', async function(next) {
 
 // Compare password method
 userSchema.methods.comparePassword = async function(candidatePassword) {
+  // If password is not loaded, we need to fetch it
+  if (!this.password) {
+    const user = await this.constructor.findById(this._id).select('+password');
+    if (!user) return false;
+    return await bcrypt.compare(candidatePassword, user.password);
+  }
   return await bcrypt.compare(candidatePassword, this.password);
 };
 

@@ -4,8 +4,11 @@ import { Toaster } from 'react-hot-toast';
 import Login from './pages/Login';
 import Signup from './pages/Signup';
 import Dashboard from './pages/Dashboard';
+import PublicDashboard from './pages/PublicDashboard';
+import AskQuestion from './pages/AskQuestion';
 import ForgotPassword from './pages/ForgotPassword';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
+import LoadingSpinner from './components/LoadingSpinner';
 import './App.css';
 
 // Protected Route Component
@@ -13,7 +16,11 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { isAuthenticated, loading } = useAuth();
   
   if (loading) {
-    return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <LoadingSpinner size="lg" text="Loading..." />
+      </div>
+    );
   }
   
   return isAuthenticated ? <>{children}</> : <Navigate to="/login" />;
@@ -24,7 +31,11 @@ const PublicRoute = ({ children }: { children: React.ReactNode }) => {
   const { isAuthenticated, loading } = useAuth();
   
   if (loading) {
-    return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <LoadingSpinner size="lg" text="Loading..." />
+      </div>
+    );
   }
   
   return isAuthenticated ? <Navigate to="/dashboard" /> : <>{children}</>;
@@ -66,7 +77,12 @@ function App() {
                 <Dashboard />
               </ProtectedRoute>
             } />
-            <Route path="/" element={<Navigate to="/login" />} />
+            <Route path="/ask" element={
+              <ProtectedRoute>
+                <AskQuestion />
+              </ProtectedRoute>
+            } />
+            <Route path="/" element={<PublicDashboard />} />
           </Routes>
         </div>
       </Router>

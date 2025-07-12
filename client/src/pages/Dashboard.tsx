@@ -1,6 +1,7 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { LogOut, User, Mail, Calendar } from 'lucide-react';
+import { LogOut, User, Mail, Calendar, Home, Plus, MessageSquare } from 'lucide-react';
 
 const Dashboard: React.FC = () => {
   const { user, logout } = useAuth();
@@ -17,13 +18,29 @@ const Dashboard: React.FC = () => {
               </div>
               <h1 className="ml-3 text-xl font-semibold text-gray-900">StackIt Dashboard</h1>
             </div>
-            <button
-              onClick={logout}
-              className="flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors"
-            >
-              <LogOut className="h-4 w-4 mr-2" />
-              Logout
-            </button>
+            <div className="flex items-center space-x-4">
+              <Link
+                to="/"
+                className="flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors"
+              >
+                <Home className="h-4 w-4 mr-2" />
+                Home
+              </Link>
+              <Link
+                to="/ask"
+                className="flex items-center px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors"
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Ask Question
+              </Link>
+              <button
+                onClick={logout}
+                className="flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors"
+              >
+                <LogOut className="h-4 w-4 mr-2" />
+                Logout
+              </button>
+            </div>
           </div>
         </div>
       </header>
