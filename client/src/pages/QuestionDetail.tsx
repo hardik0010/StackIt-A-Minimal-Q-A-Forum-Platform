@@ -11,15 +11,34 @@ import {
   CheckCircle,
   Edit,
   Trash2,
-  Send
+  Send,
+  X,
+  Check,
+  AlertCircle
 } from 'lucide-react';
 import LoadingSpinner from '../components/LoadingSpinner';
 import VoteButtons from '../components/VoteButtons';
 import Navbar from '../components/Navbar';
 import RichTextEditor from '../components/RichTextEditor';
+import AnswerComments from '../components/AnswerComments';
 import { useGuestActions } from '../hooks/useGuestActions';
 import axios from 'axios';
 import toast from 'react-hot-toast';
+
+interface Comment {
+  _id: string;
+  content: string;
+  author: {
+    _id: string;
+    username: string;
+    profile: {
+      firstName: string;
+      lastName: string;
+    };
+  };
+  createdAt: string;
+  updatedAt: string;
+}
 
 interface Answer {
   _id: string;
@@ -36,6 +55,9 @@ interface Answer {
   isAccepted: boolean;
   voteCount: number;
   userVote?: 'upvote' | 'downvote' | null;
+  isEdited?: boolean;
+  editHistory?: any[];
+  comments?: Comment[];
 }
 
 interface Question {
@@ -57,6 +79,7 @@ interface Question {
   views: number;
   createdAt: string;
   status: string;
+  acceptedAnswer?: string;
 }
 
 const QuestionDetail: React.FC = () => {
@@ -71,6 +94,8 @@ const QuestionDetail: React.FC = () => {
   const [showAnswerForm, setShowAnswerForm] = useState(false);
   const [answerContent, setAnswerContent] = useState('');
   const [submittingAnswer, setSubmittingAnswer] = useState(false);
+  const [editingAnswer, setEditingAnswer] = useState<string | null>(null);
+  const [editContent, setEditContent] = useState('');
 
   useEffect(() => {
     if (id) {
@@ -160,6 +185,69 @@ const QuestionDetail: React.FC = () => {
       const message = error.response?.data?.message || 'Failed to accept answer';
       toast.error(message);
     }
+  };
+
+  const handleUnacceptAnswer = async (answerId: string) => {
+    try {
+      const response = await axios.post(`/api/answers/${answerId}/unaccept`);
+      if (response.data.success) {
+        toast.success('Answer unaccepted!');
+        fetchAnswers(); // Refresh answers
+      }
+    } catch (error: any) {
+      const message = error.response?.data?.message || 'Failed to unaccept answer';
+      toast.error(message);
+    }
+  };
+
+  const handleEditAnswer = async (answerId: string) => {
+    if (!editContent.trim()) {
+      toast.error('Please enter content to edit');
+      return;
+    }
+
+    try {
+      const response = await axios.put(`/api/answers/${answerId}`, {
+        content: editContent
+      });
+
+      if (response.data.success) {
+        toast.success('Answer updated successfully!');
+        setEditingAnswer(null);
+        setEditContent('');
+        fetchAnswers(); // Refresh answers
+      }
+    } catch (error: any) {
+      const message = error.response?.data?.message || 'Failed to update answer';
+      toast.error(message);
+    }
+  };
+
+  const handleDeleteAnswer = async (answerId: string) => {
+    if (!window.confirm('Are you sure you want to delete this answer?')) {
+      return;
+    }
+
+    try {
+      const response = await axios.delete(`/api/answers/${answerId}`);
+      if (response.data.success) {
+        toast.success('Answer deleted successfully!');
+        fetchAnswers(); // Refresh answers
+      }
+    } catch (error: any) {
+      const message = error.response?.data?.message || 'Failed to delete answer';
+      toast.error(message);
+    }
+  };
+
+  const startEditing = (answer: Answer) => {
+    setEditingAnswer(answer._id);
+    setEditContent(answer.content);
+  };
+
+  const cancelEditing = () => {
+    setEditingAnswer(null);
+    setEditContent('');
   };
 
   const formatDate = (dateString: string) => {
@@ -324,12 +412,12 @@ const QuestionDetail: React.FC = () => {
 
             {/* Answer Form */}
             {showAnswerForm && (
-              <div className="mb-6 p-4 border border-gray-200 rounded-lg">
+              <div className="mb-6 p-4 border border-gray-200 rounded-lg bg-gray-50">
                 <h3 className="text-lg font-medium text-gray-900 mb-4">Your Answer</h3>
                 <RichTextEditor
                   value={answerContent}
                   onChange={setAnswerContent}
-                  placeholder="Write your answer here..."
+                  placeholder="Write your answer here... Use the toolbar above to format your text, add links, images, and more."
                 />
                 <div className="mt-4 flex space-x-3">
                   <button
@@ -361,7 +449,11 @@ const QuestionDetail: React.FC = () => {
             ) : (
               <div className="space-y-6">
                 {answers.map((answer) => (
-                  <div key={answer._id} className={`border rounded-lg p-4 ${answer.isAccepted ? 'border-green-200 bg-green-50' : 'border-gray-200'}`}>
+                  <div key={answer._id} className={`border rounded-lg p-4 ${
+                    answer.isAccepted 
+                      ? 'border-green-200 bg-green-50 shadow-md' 
+                      : 'border-gray-200 hover:border-gray-300'
+                  }`}>
                     <div className="flex space-x-4">
                       {/* Voting Section */}
                       <div className="flex-shrink-0">
@@ -383,6 +475,7 @@ const QuestionDetail: React.FC = () => {
                             {answer.isAccepted && (
                               <div className="flex items-center" title="Accepted answer">
                                 <CheckCircle className="h-5 w-5 text-green-600" />
+                                <span className="text-sm font-medium text-green-600 ml-1">Accepted</span>
                               </div>
                             )}
                             <span className="text-sm font-medium text-gray-900">
@@ -390,21 +483,89 @@ const QuestionDetail: React.FC = () => {
                                 ? `${answer.author.profile.firstName} ${answer.author.profile.lastName}`
                                 : answer.author.username}
                             </span>
+                            {answer.isEdited && (
+                              <span className="text-xs text-gray-500">(edited)</span>
+                            )}
                           </div>
-                          {isQuestionAuthor && !answer.isAccepted && (
-                            <button
-                              onClick={() => handleAcceptAnswer(answer._id)}
-                              className="text-sm text-green-600 hover:text-green-800 font-medium"
-                            >
-                              Accept
-                            </button>
-                          )}
+                          
+                          {/* Action Buttons */}
+                          <div className="flex items-center space-x-2">
+                            {isQuestionAuthor && (
+                              <>
+                                {answer.isAccepted ? (
+                                  <button
+                                    onClick={() => handleUnacceptAnswer(answer._id)}
+                                    className="text-sm text-red-600 hover:text-red-800 font-medium flex items-center"
+                                  >
+                                    <X className="h-4 w-4 mr-1" />
+                                    Unaccept
+                                  </button>
+                                ) : (
+                                  <button
+                                    onClick={() => handleAcceptAnswer(answer._id)}
+                                    className="text-sm text-green-600 hover:text-green-800 font-medium flex items-center"
+                                  >
+                                    <Check className="h-4 w-4 mr-1" />
+                                    Accept
+                                  </button>
+                                )}
+                              </>
+                            )}
+                            
+                            {/* Edit/Delete buttons for answer author */}
+                            {user?._id === answer.author._id && (
+                              <>
+                                {editingAnswer === answer._id ? (
+                                  <div className="flex space-x-2">
+                                    <button
+                                      onClick={() => handleEditAnswer(answer._id)}
+                                      className="text-sm text-blue-600 hover:text-blue-800 font-medium"
+                                    >
+                                      Save
+                                    </button>
+                                    <button
+                                      onClick={cancelEditing}
+                                      className="text-sm text-gray-600 hover:text-gray-800 font-medium"
+                                    >
+                                      Cancel
+                                    </button>
+                                  </div>
+                                ) : (
+                                  <div className="flex space-x-2">
+                                    <button
+                                      onClick={() => startEditing(answer)}
+                                      className="text-gray-400 hover:text-gray-600"
+                                    >
+                                      <Edit className="h-4 w-4" />
+                                    </button>
+                                    <button
+                                      onClick={() => handleDeleteAnswer(answer._id)}
+                                      className="text-gray-400 hover:text-red-600"
+                                    >
+                                      <Trash2 className="h-4 w-4" />
+                                    </button>
+                                  </div>
+                                )}
+                              </>
+                            )}
+                          </div>
                         </div>
 
-                        <div 
-                          className="prose max-w-none mb-4"
-                          dangerouslySetInnerHTML={{ __html: answer.content }}
-                        />
+                        {/* Answer Content - Show editor if editing, otherwise show formatted content */}
+                        {editingAnswer === answer._id ? (
+                          <div className="mb-4">
+                            <RichTextEditor
+                              value={editContent}
+                              onChange={setEditContent}
+                              placeholder="Edit your answer..."
+                            />
+                          </div>
+                        ) : (
+                          <div 
+                            className="prose max-w-none mb-4"
+                            dangerouslySetInnerHTML={{ __html: answer.content }}
+                          />
+                        )}
 
                         <div className="flex items-center justify-between text-sm text-gray-500">
                           <div className="flex items-center">
@@ -412,6 +573,13 @@ const QuestionDetail: React.FC = () => {
                             <span>{formatDate(answer.createdAt)}</span>
                           </div>
                         </div>
+
+                        {/* Comments Section */}
+                        <AnswerComments
+                          answerId={answer._id}
+                          comments={answer.comments || []}
+                          onCommentsUpdate={fetchAnswers}
+                        />
                       </div>
                     </div>
                   </div>
