@@ -83,54 +83,54 @@ function App() {
   return (
     <AuthProvider>
       <AdminProvider>
-        <Router>
-          <div className="App">
-            <Toaster 
-              position="top-right"
-              toastOptions={{
-                duration: 4000,
-                style: {
-                  background: '#363636',
-                  color: '#fff',
-                },
-              }}
-            />
-            <Routes>
+      <Router>
+        <div className="App">
+          <Toaster 
+            position="top-right"
+            toastOptions={{
+              duration: 4000,
+              style: {
+                background: '#363636',
+                color: '#fff',
+              },
+            }}
+          />
+          <Routes>
               {/* Public Routes */}
-              <Route path="/login" element={
-                <PublicRoute>
-                  <Login />
-                </PublicRoute>
-              } />
-              <Route path="/signup" element={
-                <PublicRoute>
-                  <Signup />
-                </PublicRoute>
-              } />
-              <Route path="/forgot-password" element={
-                <PublicRoute>
-                  <ForgotPassword />
-                </PublicRoute>
-              } />
+            <Route path="/login" element={
+              <PublicRoute>
+                <Login />
+              </PublicRoute>
+            } />
+            <Route path="/signup" element={
+              <PublicRoute>
+                <Signup />
+              </PublicRoute>
+            } />
+            <Route path="/forgot-password" element={
+              <PublicRoute>
+                <ForgotPassword />
+              </PublicRoute>
+            } />
               
               {/* Protected Routes */}
-              <Route path="/dashboard" element={
-                <ProtectedRoute>
-                  <Dashboard />
-                </ProtectedRoute>
-              } />
-              <Route path="/profile" element={
-                <ProtectedRoute>
-                  <Profile />
-                </ProtectedRoute>
-              } />
-              <Route path="/ask" element={
-                <ProtectedRoute>
-                  <AskQuestion />
-                </ProtectedRoute>
-              } />
-              <Route path="/question/:id" element={<QuestionDetail />} />
-              <Route path="/" element={<PublicDashboard />} />
+            <Route path="/dashboard" element={
+              <ProtectedRoute>
+                <Dashboard />
+              </ProtectedRoute>
+            } />
+            <Route path="/profile" element={
+              <ProtectedRoute>
+                <Profile />
+              </ProtectedRoute>
+            } />
+            <Route path="/ask" element={
+              <ProtectedRoute>
+                <AskQuestion />
+              </ProtectedRoute>
+            } />
+            <Route path="/question/:id" element={<QuestionDetail />} />
+            <Route path="/" element={<PublicDashboard />} />
               
               {/* Admin Routes */}
               <Route path="/admin/login" element={
@@ -159,9 +159,9 @@ function App() {
                   </AdminLayout>
                 </AdminProtectedRoute>
               } />
-            </Routes>
-          </div>
-        </Router>
+          </Routes>
+        </div>
+      </Router>
       </AdminProvider>
     </AuthProvider>
   );
