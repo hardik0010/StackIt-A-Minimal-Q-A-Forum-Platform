@@ -3,6 +3,7 @@ const { body, validationResult } = require('express-validator');
 const User = require('../models/User');
 const { protect, rateLimit } = require('../middleware/auth');
 const jwt = require('jsonwebtoken');
+const { sendPasswordResetEmail, sendWelcomeEmail } = require('../utils/emailService');
 
 const router = express.Router();
 
@@ -76,6 +77,11 @@ router.post('/register', [
     // Generate token
     const token = user.generateAuthToken();
 
+    // Send welcome email (don't wait for it to complete)
+    sendWelcomeEmail(email, username).catch(err => {
+      console.error('Failed to send welcome email:', err);
+    });
+
     res.status(201).json({
       success: true,
       message: 'User registered successfully',
@@ -125,7 +131,7 @@ router.post('/login', [
     if (!user) {
       return res.status(401).json({
         success: false,
-        message: 'Invalid credentials'
+        message: 'User not found. Please check your email or sign up for a new account.'
       });
     }
 
@@ -133,7 +139,7 @@ router.post('/login', [
     if (user.isBanned) {
       return res.status(403).json({
         success: false,
-        message: 'Your account has been banned'
+        message: 'Your account has been banned. Please contact support for more information.'
       });
     }
 
@@ -142,7 +148,7 @@ router.post('/login', [
     if (!isPasswordValid) {
       return res.status(401).json({
         success: false,
-        message: 'Invalid credentials'
+        message: 'Incorrect password. Please try again or use forgot password to reset.'
       });
     }
 
@@ -275,12 +281,20 @@ router.post('/forgot-password', [
       { expiresIn: '1h' }
     );
 
-    // TODO: Send email with reset link
-    // For now, just return success message
-    res.json({
-      success: true,
-      message: 'If an account with that email exists, a password reset link has been sent'
-    });
+    // Send password reset email
+    const emailSent = await sendPasswordResetEmail(email, resetToken, user.username);
+    
+    if (emailSent) {
+      res.json({
+        success: true,
+        message: 'Password reset link has been sent to your email'
+      });
+    } else {
+      res.status(500).json({
+        success: false,
+        message: 'Failed to send password reset email. Please try again later.'
+      });
+    }
 
   } catch (error) {
     console.error('Forgot password error:', error);

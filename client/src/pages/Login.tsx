@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { Eye, EyeOff, Mail, Lock, ArrowRight } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
+import LoadingSpinner from '../components/LoadingSpinner';
 
 interface LoginFormData {
   email: string;
@@ -29,6 +30,7 @@ const Login: React.FC = () => {
     if (success) {
       navigate('/dashboard');
     }
+    // Error handling is done in the AuthContext with toast notifications
   };
 
   return (
@@ -133,8 +135,8 @@ const Login: React.FC = () => {
             >
               {isLoading ? (
                 <div className="flex items-center">
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                  Signing in...
+                  <LoadingSpinner size="sm" color="white" />
+                  <span className="ml-2">Signing in...</span>
                 </div>
               ) : (
                 <div className="flex items-center">
